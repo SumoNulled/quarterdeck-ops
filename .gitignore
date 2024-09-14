@@ -1,6 +1,8 @@
 database.ini
 index.html
-pages/
+/pages/              # Exclude the root /pages directory
+!/app/tpl/pages/     # Include /app/tpl/pages directory
+!/app/tpl/pages/**   # Include all files in /app/tpl/pages
 plugins/
 documentation/
 bower.json
