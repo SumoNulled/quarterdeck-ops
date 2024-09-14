@@ -457,7 +457,7 @@ class DutyWatchbill
         );
 
         // Check if the sailor is already assigned to 2 watches for the day
-        return $watchCount < 20;
+        return $watchCount < 2;
     }
 
     /**
