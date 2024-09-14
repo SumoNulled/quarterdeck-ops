@@ -1,0 +1,13 @@
+php_value auto_prepend_file /xampp/www/qdops.com/app/tpl/classes/Loaders/class.Autoloader.php
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule .* - [E=HTTP_X_FORWARDED_FOR:%{HTTP_X_FORWARDED_FOR}]
+    RewriteBase /
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L]
+</IfModule>

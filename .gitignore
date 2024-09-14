@@ -1,0 +1,12 @@
+database.ini
+index.html
+pages/
+plugins/
+documentation/
+bower.json
+compilerconfig.json
+compilerconfig.json.defaults
+favicon.ico
+LICENSE.md
+package.json
+README.md
