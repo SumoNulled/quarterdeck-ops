@@ -32,7 +32,7 @@ $(document).ready(function() {
             (($this.data('baw_signed') !== undefined && bawName === '') ||
              ($this.data('brw_signed') !== undefined && brwName === ''))) {
             var $alert = $('<div>', {
-                text: "Error: Unable to sign. There is no assigned watchstander for the " + timeRange + " slot at " + buildingName + ".",
+                text: "Error: Unable to sign. There is no assigned watchstander for this " + timeRange + " slot at " + buildingName + ".",
                 class: 'alert bg-red animated fadeIn',
                 css: {
                     'position': 'fixed',
