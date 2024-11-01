@@ -64,3 +64,7 @@ QuarterdeckOps builds watchbills dynamically by considering qualifications, duty
 | `duty_watchbill`       | Tracks watch assignments with foreign keys to `sailors`, `duty_locations`, and time slots. |
 | `sailors`              | Holds sailor information, including qualifications and limitations.                        |
 | `sailors_class_hours`  | Stores class hours with start and end times, linked to sailors.                            |
+
+# What does it solve?
+
+QDOPS (QuarterdeckOps) solves the complex problem of generating and managing watchbills in a structured, fair, and efficient way. It addresses the challenge of scheduling duty assignments while adhering to strict criteria. By automating certain aspects of watchbill generation, QDOPS not only saves time but also enhances compliance, fairness, and reliability, addressing key operational and personnel concerns.
