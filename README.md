@@ -38,6 +38,11 @@ QuarterdeckOps builds watchbills dynamically by considering qualifications, duty
 5. **Automated Status Updates**:
    - Toggling signed statuses with real-time alerts for missing watchstanders.
 
+6. **Manual Watchbill Management**:
+   - If a fine-toothed comb is required to complete a watchbill, manual selections are available by clicking on any watch slot to reveal the drop down menu.
+   - ![image](https://github.com/user-attachments/assets/5930c453-e800-4fe7-9b2b-a20faa9839b2)
+
+
 ## Database Schema
 
 | Table                  | Description                                                                                 |
