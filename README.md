@@ -45,7 +45,8 @@ QuarterdeckOps builds watchbills dynamically by considering qualifications, duty
 
 6. **Manual Watchbill Management**:
    - If a fine-toothed comb is required to complete a watchbill, manual selections are available by clicking on any watch slot to reveal the drop down menu.
-   - ![image](https://github.com/user-attachments/assets/5930c453-e800-4fe7-9b2b-a20faa9839b2)
+   - ![image](https://github.com/user-attachments/assets/17f43457-1815-4715-8c9a-1dbb1bcd673f)
+
 
 7. **Clerical Error Handling**:
    - The system prevents the user from making simple mistakes, such as signing for watches that have no one assigned to them.
