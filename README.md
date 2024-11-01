@@ -4,7 +4,7 @@
 
 *QuarterdeckOps is a **completely** local solution. Data is stored locally and no internet connection is required, however internet OR intranet will be required to sync data across multiple devices.*
 
-![image](https://github.com/user-attachments/assets/06c32afc-d47f-4463-b3b5-4a4364be52e7)
+![image](https://github.com/user-attachments/assets/7ad59993-8ec9-4b99-88d4-ed81769c8e57)
 
 ## Project Overview
 
@@ -45,9 +45,7 @@ QuarterdeckOps builds watchbills dynamically by considering qualifications, duty
 
 6. **Manual Watchbill Management**:
    - If a fine-toothed comb is required to complete a watchbill, manual selections are available by clicking on any watch slot to reveal the drop down menu.
-   - ![image](https://github.com/user-attachments/assets/1ac6cbfd-04be-4786-8760-3eece795e1f8)
-
-
+   - ![image](https://github.com/user-attachments/assets/5a54273b-2e04-4305-8e91-589adabfcd05)
 
 7. **Clerical Error Handling**:
    - The system prevents the user from making simple mistakes, such as signing for watches that have no one assigned to them.
