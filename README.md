@@ -2,6 +2,8 @@
 
 **QuarterdeckOps** is an automated system for generating and managing watchbills, handling watch assignments, time slot management, sailor qualifications, and duty location monitoring based on specific constraints. The goal is to ensure fair, efficient, and compliant watch assignments for sailors on both weekdays and weekends, minimizing conflicts with class times, mandatory study periods, and other sailor-specific limitations.
 
+*QuarterdeckOps is a **completely** local solution. Data is stored locally and no internet connection is required, however internet OR intranet will be required to sync data across multiple devices.*
+
 ![image](https://github.com/user-attachments/assets/06c32afc-d47f-4463-b3b5-4a4364be52e7)
 
 ## Project Overview
