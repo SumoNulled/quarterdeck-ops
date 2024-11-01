@@ -13,7 +13,7 @@ QuarterdeckOps builds watchbills dynamically by considering qualifications, duty
 - **Dynamic Time Slot Management**: Differentiates between weekday and weekend time slots, updating assignments based on building responsibilities.
 - **Sailor Qualifications Filtering**: Assigns watches based on sailor qualifications for secured/unsecured buildings.
 - **Automated Conflict Resolution**: Ensures no watch assignments overlap with sailor class times or mandatory study periods.
-- **Flexible Duty Assignments**: Supports multiple buildings and responsible officers, with watchstanders restricted from duplicate time slots across different buildings on the same day.
+- **Flexible Duty Assignments**: Supports multiple buildings, with watchstanders prevented from being assigned to duplicate time slots across different buildings on the same day.
 
 ## Features
 
@@ -32,7 +32,7 @@ QuarterdeckOps builds watchbills dynamically by considering qualifications, duty
    - **Multiple Watch Relief**: A sailor cannot stand two consecutive watches, and no more than 6 hours of duty a day.
 
 3. **Database-Driven Time Slot Assignments**:
-   - Detailed schemas for `duty_watchbill_2`, `sailors`, `duty_locations`, `duty_positions`, `duty_timeslots`, `duty_timeslot_assignments`, and `sailors_class_hours` tables.
+   - Detailed schemas for `duty_watchbill`, `sailors`, `duty_locations`, `duty_positions`, `duty_timeslots`, `duty_timeslot_assignments`, and `sailors_class_hours` tables.
    - **Efficient Data Querying** using MySQLi prepared statements to ensure safe and secure database transactions.
 
 4. **User Interface (UI)**:
