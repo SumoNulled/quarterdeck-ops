@@ -58,6 +58,6 @@ QuarterdeckOps builds watchbills dynamically by considering qualifications, duty
 | `duty_positions`       | Defines positions for watchstanders, including `BAW`, `BRW`, and `Colors`.                 |
 | `duty_timeslots`       | Time slot definitions for start and end times.                                              |
 | `duty_timeslot_assignments` | Maps time slots to specific types (`WD`, `WE`, `OTH`).                             |
-| `duty_watchbill_2`     | Tracks watch assignments with foreign keys to `sailors`, `duty_locations`, and time slots. |
+| `duty_watchbill`       | Tracks watch assignments with foreign keys to `sailors`, `duty_locations`, and time slots. |
 | `sailors`              | Holds sailor information, including qualifications and limitations.                        |
 | `sailors_class_hours`  | Stores class hours with start and end times, linked to sailors.                            |
