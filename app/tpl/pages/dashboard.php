@@ -5,7 +5,7 @@
       $conn = new \Database\MySQLi();
       $timeslots = new \WatchBill\TimeSlots($conn);
 
-      $date = new DateTime('2024-09-13');
+      $date = new DateTime('2024-12-1');
       $dutyWatchbill = new \WatchBill\DutyWatchbillRenderer($conn, $date);
 
       $dayOfWeek = $date->format('N');
@@ -129,7 +129,7 @@
                                  <tbody>
                                     <tr>
                                        <td colspan="2" style="text-align: center; vertical-align: middle;">
-                                          <?php echo strtoupper($date->format('dMy')); ?>, FOXTROT<br/><small><?php echo $dayOfWeek . ' Version';?></small>
+                                          <?php echo strtoupper($date->format('dMy')); ?>, FOXTROT<br/><small><?php echo $timeSlotCode . ' Version';?></small>
                                        </td>
                                        <td colspan="7" style="padding: 0; margin: 0; height: 100%;">
                                           <table class="table table-bordered table-striped table-hover" style="margin: 0; padding: 0; height: 100%; width: 100%;">

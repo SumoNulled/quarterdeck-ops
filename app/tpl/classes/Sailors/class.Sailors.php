@@ -19,6 +19,11 @@ class Sailors
     private \Sailors\SailorsClassHours $sailorsClassHours;
 
     /**
+    * @var \Sailors\SailorsMandatoryStudy $sailorsStudyHours The SailorsMandatoryStudy object.
+    */
+    private \Sailors\SailorsMandatoryStudy $sailorsStudyHours;
+
+    /**
      * @var DutyLocations $dutyLocation The DutyLocation class instance.
      */
     private \WatchBill\DutyLocations $dutyLocation;
@@ -36,6 +41,7 @@ class Sailors
         // Fetch the sailor data and assign it to the sailor array
         $this->sailor = $this->conn->Rows("SELECT * FROM sailors");
         $this->sailorsClassHours = new \Sailors\SailorsClassHours($this->conn);
+        $this->sailorsStudyHours = new \Sailors\SailorsMandatoryStudy($this->conn);
         $this->dutyLocation = new \WatchBill\DutyLocations($this->conn);
     }
 
@@ -94,6 +100,12 @@ class Sailors
      {
        return $this->sailorsClassHours->getClassHoursById($this->getById($id, 'hours'));
      }
+
+     public function getStudyHours(int $id): array | null
+     {
+        return $this->sailorsStudyHours->getStudyHoursById($this->getById($id, 'mandatory_study')) ?? null;
+     }
+
     /**
      * Check if the sailor has mandatory study.
      *
@@ -115,7 +127,7 @@ class Sailors
     }
 
     /**
-     * Check if the sailor is a duty driver.
+     * Check if the sailor is light limited duty
      *
      * @return bool True if the sailor is on light limited duty, false otherwise
      */

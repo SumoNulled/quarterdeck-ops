@@ -25,8 +25,8 @@ try {
             $output .= "<td>" . htmlspecialchars($row['beq'], ENT_QUOTES, 'UTF-8') . "</td>";
             $output .= "<td>" . htmlspecialchars($row['room_number'], ENT_QUOTES, 'UTF-8') . "</td>";
             $output .= "<td>" . htmlspecialchars($row['phone_number'], ENT_QUOTES, 'UTF-8') . "</td>";
-            $output .= "<td>" . htmlspecialchars($row['basic'], ENT_QUOTES, 'UTF-8') . "</td>";
-            $output .= "<td>" . htmlspecialchars($row['secure'], ENT_QUOTES, 'UTF-8') . "</td>";
+            $output .= "<td>" . htmlspecialchars($row['basic_qualified'], ENT_QUOTES, 'UTF-8') . "</td>";
+            $output .= "<td>" . htmlspecialchars($row['secure_qualified'], ENT_QUOTES, 'UTF-8') . "</td>";
             $output .= "</tr>";
         }
 

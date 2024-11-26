@@ -46,7 +46,6 @@ class DutyWatchbill
      *
      * @param \Database\MySQLi $conn The database connection object
      */
-
     public function __construct(\Database\MySQLi $conn, \DateTime $date)
     {
         $this->conn = $conn;
@@ -289,7 +288,15 @@ class DutyWatchbill
         }
 
         // Check if sailor has mandatory study conflict during the week. (Excludes weekends).
-        // Add code here once ready.
+        if ($this->sailor->hasMandatoryStudy() &&
+            ($this->timeRangesOverlap(
+                $watch["id"],
+                $this->sailor->getStudyHours($sailor["id"])
+            ) &&
+            !$this->isWeekendWatch($watch["id"]))
+        ) {
+            return false;
+        }
 
         // Check if the watch location is a SECURED building
         $isSecured = $this->isSecureWatch($watch["id"]);

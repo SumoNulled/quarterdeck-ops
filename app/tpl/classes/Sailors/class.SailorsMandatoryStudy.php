@@ -2,7 +2,7 @@
 
 namespace Sailors;
 
-class SailorsClassHours
+class SailorsMandatoryStudy
 {
     /**
      * @var \Database\MySQLi $conn The database connection object
@@ -25,13 +25,13 @@ class SailorsClassHours
     {
         $this->conn = $conn;
 
-        $query = "SELECT id, class_start, class_end FROM sailors_class_hours";
+        $query = "SELECT id, start_time, end_time FROM mandatory_study_periods";
         $this->table = $this->conn->Rows($query);
     }
 
     /**
-    * Magic method to get sailor properties dynamically.
-    * Example: $sailor->duty will call __get('duty')
+    * Magic method to get mandatory study properties dynamically.
+    * Example: $mando->duty will call __get('duty')
     *
     * @param string $property The name of the property being accessed
     * @return mixed The value of the property, or null if not found
@@ -57,7 +57,7 @@ class SailorsClassHours
 
      /**
       * Magic method to get specific rows or attributes dynamically.
-      * Example: $SailorsClassHours->getById(3, 'class_start') will return the class start time.
+      * Example: $SailorsMandatoryStudy->getById(3, 'start_time') will return the class start time.
       *
       * @param int $id The specific watchbill ID you want to access
       * @param string $property The specific column (attribute) you want to access
@@ -84,11 +84,11 @@ class SailorsClassHours
      * @return array An array where index 0 is the class_start and index 1 is the class_end.
      * @throws \Exception If no record is found for the given ID.
      */
-    public function getClassHoursById(?int $id): array
+    public function getStudyHoursById(?int $id): array
     {
 
-        $class_start = $this->getById($id, 'class_start');
-        $class_end = $this->getById($id, 'class_end');
+        $class_start = $this->getById($id, 'start_time');
+        $class_end = $this->getById($id, 'end_time');
 
         if(!empty($class_start) && !empty($class_end))
         {
