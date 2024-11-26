@@ -65,7 +65,7 @@ class DutyWatchbill
             1
         );
         $relevantTimeSlots = implode(",", $this->filteredTimeSlots);
-        $query = "SELECT dw.*, dta.sequence FROM duty_watchbill_2 dw JOIN duty_timeslot_assignments dta ON dta.id = dw.timeslot_assignment WHERE dw.date = ? AND dw.timeslot_assignment IN ({$relevantTimeSlots}) ORDER BY sequence ASC";
+        $query = "SELECT dw.*, dta.sequence, dta.type FROM duty_watchbill_2 dw JOIN duty_timeslot_assignments dta ON dta.id = dw.timeslot_assignment WHERE dw.date = ? AND dw.timeslot_assignment IN ({$relevantTimeSlots}) ORDER BY sequence ASC";
         $this->table = $this->conn->Rows($query, $this->date);
     }
 
@@ -323,14 +323,6 @@ class DutyWatchbill
         return true;
     }
 
-    /**
-     * Fills the watchbill with available sailors.
-     *
-     * This method assigns sailors to empty watch slots for BAW and BRW positions.
-     * It first attempts to assign sailors to any empty slots, and then fills remaining empty slots by doubling up sailors if needed.
-     *
-     * @return array Returns an array of empty watch slots remaining after assignment.
-     */
     public function fillWatchBill(): array
     {
         // Get the list of sailors and shuffle to randomize assignment
@@ -348,6 +340,9 @@ class DutyWatchbill
         foreach ($sailors as $sailor) {
             $sailorMap[$sailor["id"]] = $sailor;
         }
+
+        // Initialize the log string
+        $log = "";
 
         // Update watch slots
         $updateQueries = [];
@@ -367,6 +362,17 @@ class DutyWatchbill
                             "field" => "baw_id",
                             "value" => $sailor["id"],
                         ];
+
+                        // Add log entry for BAW assignment
+                        $log .=
+                            "[" .
+                            date("Y-m-d H:i:s") .
+                            "] Assigned sailor " .
+                            $sailor["last_name"] .
+                            " to BAW in " .
+                            $row["watch_location"] .
+                            "\n";
+
                         break;
                     }
                 }
@@ -387,20 +393,33 @@ class DutyWatchbill
                             "field" => "brw_id",
                             "value" => $sailor["id"],
                         ];
+
+                        // Add log entry for BRW assignment
+                        $log .=
+                            "[" .
+                            date("Y-m-d H:i:s") .
+                            "] Assigned sailor " .
+                            $sailor["last_name"] .
+                            " to BRW in " .
+                            $row["watch_location"] .
+                            "\n";
+
                         break;
                     }
                 }
             }
         }
 
-        // Perform batch update for all queries
-        foreach ($updateQueries as $queryData) {
-            $this->conn->Query(
-                "UPDATE duty_watchbill_2 SET {$queryData["field"]} = ? WHERE id = ?",
-                $queryData["value"],
-                $queryData["id"]
-            );
-        }
+        /*  // Perform batch update for all queries
+      foreach ($updateQueries as $queryData) {
+          $this->conn->Query(
+              "UPDATE duty_watchbill_2 SET {$queryData["field"]} = ? WHERE id = ?",
+              $queryData["value"],
+              $queryData["id"]
+          );
+      }*/
+
+        $this->updateWatchbill($updateQueries);
 
         // Check for remaining empty watches and handle doubling up if needed
         $emptyWatches = $this->getEmptyWatches();
@@ -419,6 +438,17 @@ class DutyWatchbill
                                 $sailor["id"],
                                 $emptyRow["id"]
                             );
+
+                            // Add log entry for BAW double-up assignment
+                            $log .=
+                                "[" .
+                                date("Y-m-d H:i:s") .
+                                "] Double-up: Assigned sailor " .
+                                $sailor["last_name"] .
+                                " to BAW in " .
+                                $emptyRow["watch_location"] .
+                                "\n";
+
                             break;
                         }
                     }
@@ -435,12 +465,34 @@ class DutyWatchbill
                                 $sailor["id"],
                                 $emptyRow["id"]
                             );
+
+                            // Add log entry for BRW double-up assignment
+                            $log .=
+                                "[" .
+                                date("Y-m-d H:i:s") .
+                                "] Double-up: Assigned sailor " .
+                                $sailor["last_name"] .
+                                " to BRW in " .
+                                $emptyRow["watch_location"] .
+                                "\n";
+
                             break;
                         }
                     }
                 }
             }
         }
+
+        $logFileName = "watchbill_log_" . date("Y-m-d_H-i-s") . ".txt";
+        $logDirectory = "C:/xampp/www/qdops.com/"; // Ensure this path exists
+
+        // Check if the directory exists, and create it if it doesn't
+        if (!is_dir($logDirectory)) {
+            mkdir($logDirectory, 0777, true); // This creates the directory with appropriate permissions
+        }
+
+        $filePath = $logDirectory . $logFileName;
+        file_put_contents($filePath, $log);
 
         // Return remaining empty watch slots
         return $this->getEmptyWatches();
@@ -549,6 +601,52 @@ class DutyWatchbill
     }
 
     /**
+     * Performs a batch update in a single query.
+     */
+    public function updateWatchbill(array $updateQueries): void
+    {
+        // Prepare arrays to hold the query parts
+        $setClauses = [
+            "baw_id" => [],
+            "brw_id" => [],
+        ];
+        $ids = [];
+        $values = [];
+
+        // Collect the field, value, and id data for the query
+        foreach ($updateQueries as $queryData) {
+            $ids[] = $queryData["id"];
+            $values[] = $queryData["value"];
+
+            // Assign the value for the respective field (baw_id or brw_id)
+            if ($queryData["field"] === "baw_id") {
+                $setClauses["baw_id"][] = "WHEN {$queryData["id"]} THEN ?";
+            } elseif ($queryData["field"] === "brw_id") {
+                $setClauses["brw_id"][] = "WHEN {$queryData["id"]} THEN ?";
+            }
+        }
+
+        // Construct the final SET clause
+        $finalSetClauses = [];
+        foreach ($setClauses as $field => $caseClauses) {
+            if (!empty($caseClauses)) {
+                $finalSetClauses[] =
+                    "{$field} = CASE " . implode(" ", $caseClauses) . " END";
+            }
+        }
+
+        // Create the final query string
+        $setClauseStr = implode(", ", $finalSetClauses);
+        $query =
+            "UPDATE duty_watchbill_2 SET $setClauseStr WHERE id IN (" .
+            implode(",", $ids) .
+            ")";
+
+        // Execute the query with the values
+        $this->conn->Query($query, ...$values);
+    }
+
+    /**
      * Retrieves all empty watch slots from the current table data.
      *
      * @return array Returns an array of rows representing empty watch slots.
@@ -567,10 +665,16 @@ class DutyWatchbill
                     "baw_id" => $row["baw_id"],
                     "brw_id" => $row["brw_id"],
                     "date" => $row["date"],
+                    "secure" => $this->isSecureWatch($row["id"]) ? 1 : 0, // Convert boolean to integer
                 ];
             }
         }
 
+        // Basic Watches First
+        /*  usort($emptyWatches, function ($a, $b) {
+            return (int)$a['secure'] <=> (int)$b['secure']; // Cast boolean to int for comparison
+        });
+        */
         return $emptyWatches;
     }
 
