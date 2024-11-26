@@ -91,6 +91,7 @@ class TimeSlots
      * Get all time slot assignments based on a type (weekday, weekend, other).
      *
      * @param string $type The type of timeslot ('WD', 'WE', 'OTH').
+     * @param int $option Switches between return only IDs or the whole data row.
      * @return array|bool Returns an array of time slot assignments or false on failure.
      */
     public function getTimeSlotAssignmentsByType(string $type, int $option = 0) : array | bool
@@ -100,7 +101,7 @@ class TimeSlots
         $query = "SELECT dta.id, dt.start_time, dt.end_time, dta.description, dta.sequence, dta.type
                   FROM duty_timeslot_assignments dta
                   JOIN duty_timeslots dt ON dta.timeslot_id = dt.id
-                  WHERE dta.type = ?";
+                  WHERE dta.type = ? ORDER BY dta.sequence ASC";
 
                   switch ($option)
                   {

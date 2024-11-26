@@ -41,6 +41,11 @@ class DutyWatchbill
     private \WatchBill\TimeSlots $timeSlot;
 
     /**
+    * @var array $filteredTimeSlots The time slots filtered by weekend/weekday.
+    */
+    private array $filteredTimeSlots;
+
+    /**
      * Constructor method.
      * Initializes the sailor object by fetching their data from the database.
      *
@@ -55,11 +60,11 @@ class DutyWatchbill
         $this->dutyLocation = new \WatchBill\DutyLocations($this->conn);
         // Get the day of the week (1 for Monday, 7 for Sunday)
         $dayOfWeek = $date->format("N") >= 6 ? "WE" : "WD";
-        $relevantTimeSlots = $this->timeSlot->getTimeSlotAssignmentsByType(
+        $this->filteredTimeSlots = $this->timeSlot->getTimeSlotAssignmentsByType(
             $dayOfWeek,
             1
         );
-        $relevantTimeSlots = implode(",", $relevantTimeSlots);
+        $relevantTimeSlots = implode(",", $this->filteredTimeSlots);
         $query = "SELECT dw.*, dta.sequence FROM duty_watchbill_2 dw JOIN duty_timeslot_assignments dta ON dta.id = dw.timeslot_assignment WHERE dw.date = ? AND dw.timeslot_assignment IN ({$relevantTimeSlots}) ORDER BY sequence ASC";
         $this->table = $this->conn->Rows($query, $this->date);
     }
@@ -196,6 +201,7 @@ class DutyWatchbill
     /**
      * Determines if a given time range overlaps with the current time slot.
      *
+     * @param int $id The timeslot_assignment id.
      * @param array $timeRange An array with start and end times in 'H:i' format (e.g., ['09:00', '12:00']).
      * @return bool
      * @throws \Exception If the time ranges are missing or invalid.
@@ -501,20 +507,28 @@ class DutyWatchbill
     ): bool {
         $timeslotAssignmentId = $row["timeslot_assignment"];
 
+        $timeSlotIndex = array_search($timeslotAssignmentId, $this->filteredTimeSlots);
+        $nextTimeSlot = isset($this->filteredTimeSlots[$timeSlotIndex + 1]) ? $this->filteredTimeSlots[$timeSlotIndex + 1] : null;
+        $previousTimeSlot = isset($this->filteredTimeSlots[$timeSlotIndex - 1]) ? $this->filteredTimeSlots[$timeSlotIndex - 1] : null;
+
+
         $query = "SELECT COUNT(*) AS count
                 FROM duty_watchbill_2
                 WHERE (baw_id = ? OR brw_id = ?)
-                AND timeslot_assignment = ?";
+                AND (timeslot_assignment IN (?, ?, ?))";
 
         $result = $this->conn->Rows(
             $query,
             $sailor["id"],
             $sailor["id"],
-            $timeslotAssignmentId
+            $timeslotAssignmentId,
+            $nextTimeSlot,
+            $previousTimeSlot
         );
 
         return $result[0]["count"] > 0; // Return true if count is greater than 0
     }
+
 
     /**
      * Empties all the slots in the watchbill.
