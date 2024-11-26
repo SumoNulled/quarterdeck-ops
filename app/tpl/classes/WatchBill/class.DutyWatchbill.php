@@ -41,8 +41,8 @@ class DutyWatchbill
     private \WatchBill\TimeSlots $timeSlot;
 
     /**
-    * @var array $filteredTimeSlots The time slots filtered by weekend/weekday.
-    */
+     * @var array $filteredTimeSlots The time slots filtered by weekend/weekday.
+     */
     private array $filteredTimeSlots;
 
     /**
@@ -277,7 +277,8 @@ class DutyWatchbill
         // Sailor on Light Limited Duty cannot stand BRW watches
         if (
             $sailor["light_limited_duty"] === 1 &&
-            isset($watch["position"]) && $watch['position'] == "BRW"
+            isset($watch["position"]) &&
+            $watch["position"] == "BRW"
         ) {
             return false;
         }
@@ -294,12 +295,13 @@ class DutyWatchbill
         }
 
         // Check if sailor has mandatory study conflict during the week. (Excludes weekends).
-        if ($this->sailor->hasMandatoryStudy() &&
+        if (
+            $this->sailor->hasMandatoryStudy() &&
             ($this->timeRangesOverlap(
                 $watch["id"],
                 $this->sailor->getStudyHours($sailor["id"])
             ) &&
-            !$this->isWeekendWatch($watch["id"]))
+                !$this->isWeekendWatch($watch["id"]))
         ) {
             return false;
         }
@@ -329,121 +331,120 @@ class DutyWatchbill
      *
      * @return array Returns an array of empty watch slots remaining after assignment.
      */
-     public function fillWatchBill(): array
-     {
-     // Get the list of sailors and shuffle to randomize assignment
-     $sailors = $this->sailor->getSailorsArray();
-     shuffle($sailors);
+    public function fillWatchBill(): array
+    {
+        // Get the list of sailors and shuffle to randomize assignment
+        $sailors = $this->sailor->getSailorsArray();
+        shuffle($sailors);
 
-     // Get the IDs of sailors already assigned to any watches
-     $usedSailors = explode(",", $this->getSailorsWithWatches());
+        // Get the IDs of sailors already assigned to any watches
+        $usedSailors = explode(",", $this->getSailorsWithWatches());
 
-     // Pre-fetch empty watch slots
-     $emptyWatches = $this->getEmptyWatches();
+        // Pre-fetch empty watch slots
+        $emptyWatches = $this->getEmptyWatches();
 
-     // Create a map of sailor IDs to sailor data for quick lookup
-     $sailorMap = [];
-     foreach ($sailors as $sailor) {
-         $sailorMap[$sailor["id"]] = $sailor;
-     }
+        // Create a map of sailor IDs to sailor data for quick lookup
+        $sailorMap = [];
+        foreach ($sailors as $sailor) {
+            $sailorMap[$sailor["id"]] = $sailor;
+        }
 
-     // Update watch slots
-     $updateQueries = [];
-     foreach ($emptyWatches as $row) {
-         // Assign BAW if empty
-         if (is_null($row["baw_id"])) {
-           $row['position'] = "BAW";
-             foreach ($sailors as $sailor) {
-                 if (
-                     !in_array($sailor["id"], $usedSailors) &&
-                     $this->isSailorQualified($sailor, $row)
-                 ) {
-                     $row["baw_id"] = $sailor["id"];
-                     $usedSailors[] = $sailor["id"];
-                     $updateQueries[] = [
-                         "id" => $row["id"],
-                         "field" => "baw_id",
-                         "value" => $sailor["id"]
-                     ];
-                     break;
-                 }
-             }
-         }
+        // Update watch slots
+        $updateQueries = [];
+        foreach ($emptyWatches as $row) {
+            // Assign BAW if empty
+            if (is_null($row["baw_id"])) {
+                $row["position"] = "BAW";
+                foreach ($sailors as $sailor) {
+                    if (
+                        !in_array($sailor["id"], $usedSailors) &&
+                        $this->isSailorQualified($sailor, $row)
+                    ) {
+                        $row["baw_id"] = $sailor["id"];
+                        $usedSailors[] = $sailor["id"];
+                        $updateQueries[] = [
+                            "id" => $row["id"],
+                            "field" => "baw_id",
+                            "value" => $sailor["id"],
+                        ];
+                        break;
+                    }
+                }
+            }
 
-         // Assign BRW if empty
-         if (is_null($row["brw_id"])) {
-           $row['position'] = "BRW";
-             foreach ($sailors as $sailor) {
-                 if (
-                     !in_array($sailor["id"], $usedSailors) &&
-                     $this->isSailorQualified($sailor, $row)
-                 ) {
-                     $row["brw_id"] = $sailor["id"];
-                     $usedSailors[] = $sailor["id"];
-                     $updateQueries[] = [
-                         "id" => $row["id"],
-                         "field" => "brw_id",
-                         "value" => $sailor["id"]
-                     ];
-                     break;
-                 }
-             }
-         }
-     }
+            // Assign BRW if empty
+            if (is_null($row["brw_id"])) {
+                $row["position"] = "BRW";
+                foreach ($sailors as $sailor) {
+                    if (
+                        !in_array($sailor["id"], $usedSailors) &&
+                        $this->isSailorQualified($sailor, $row)
+                    ) {
+                        $row["brw_id"] = $sailor["id"];
+                        $usedSailors[] = $sailor["id"];
+                        $updateQueries[] = [
+                            "id" => $row["id"],
+                            "field" => "brw_id",
+                            "value" => $sailor["id"],
+                        ];
+                        break;
+                    }
+                }
+            }
+        }
 
-     // Perform batch update for all queries
-     foreach ($updateQueries as $queryData) {
-         $this->conn->Query(
-             "UPDATE duty_watchbill_2 SET {$queryData['field']} = ? WHERE id = ?",
-             $queryData['value'],
-             $queryData['id']
-         );
-     }
+        // Perform batch update for all queries
+        foreach ($updateQueries as $queryData) {
+            $this->conn->Query(
+                "UPDATE duty_watchbill_2 SET {$queryData["field"]} = ? WHERE id = ?",
+                $queryData["value"],
+                $queryData["id"]
+            );
+        }
 
-     // Check for remaining empty watches and handle doubling up if needed
-     $emptyWatches = $this->getEmptyWatches();
-     if (!empty($emptyWatches)) {
-         foreach ($emptyWatches as $emptyRow) {
-             shuffle($sailors); // Shuffle for randomness in doubling up
+        // Check for remaining empty watches and handle doubling up if needed
+        $emptyWatches = $this->getEmptyWatches();
+        if (!empty($emptyWatches)) {
+            foreach ($emptyWatches as $emptyRow) {
+                shuffle($sailors); // Shuffle for randomness in doubling up
 
-             // Handle BAW empty slots first
-             if (is_null($emptyRow["baw_id"])) {
-               $emptyRow['position'] = "BAW";
-                 foreach ($sailors as $sailor) {
-                     if ($this->canDoubleUp($sailor, $emptyRow)) {
-                         $emptyRow["baw_id"] = $sailor["id"];
-                         $this->conn->Query(
-                             "UPDATE duty_watchbill_2 SET baw_id = ? WHERE id = ?",
-                             $sailor["id"],
-                             $emptyRow["id"]
-                         );
-                         break;
-                     }
-                 }
-             }
+                // Handle BAW empty slots first
+                if (is_null($emptyRow["baw_id"])) {
+                    $emptyRow["position"] = "BAW";
+                    foreach ($sailors as $sailor) {
+                        if ($this->canDoubleUp($sailor, $emptyRow)) {
+                            $emptyRow["baw_id"] = $sailor["id"];
+                            $this->conn->Query(
+                                "UPDATE duty_watchbill_2 SET baw_id = ? WHERE id = ?",
+                                $sailor["id"],
+                                $emptyRow["id"]
+                            );
+                            break;
+                        }
+                    }
+                }
 
-             // Handle BRW empty slots
-             if (is_null($emptyRow["brw_id"])) {
-               $emptyRow['position'] = "BRW";
-                 foreach ($sailors as $sailor) {
-                     if ($this->canDoubleUp($sailor, $emptyRow)) {
-                         $emptyRow["brw_id"] = $sailor["id"];
-                         $this->conn->Query(
-                             "UPDATE duty_watchbill_2 SET brw_id = ? WHERE id = ?",
-                             $sailor["id"],
-                             $emptyRow["id"]
-                         );
-                         break;
-                     }
-                 }
-             }
-         }
-     }
+                // Handle BRW empty slots
+                if (is_null($emptyRow["brw_id"])) {
+                    $emptyRow["position"] = "BRW";
+                    foreach ($sailors as $sailor) {
+                        if ($this->canDoubleUp($sailor, $emptyRow)) {
+                            $emptyRow["brw_id"] = $sailor["id"];
+                            $this->conn->Query(
+                                "UPDATE duty_watchbill_2 SET brw_id = ? WHERE id = ?",
+                                $sailor["id"],
+                                $emptyRow["id"]
+                            );
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
-     // Return remaining empty watch slots
-     return $this->getEmptyWatches();
- }
-
+        // Return remaining empty watch slots
+        return $this->getEmptyWatches();
+    }
 
     /**
      * Checks if a sailor can be assigned to a watch position even if they are already assigned to another.
@@ -507,10 +508,16 @@ class DutyWatchbill
     ): bool {
         $timeslotAssignmentId = $row["timeslot_assignment"];
 
-        $timeSlotIndex = array_search($timeslotAssignmentId, $this->filteredTimeSlots);
-        $nextTimeSlot = isset($this->filteredTimeSlots[$timeSlotIndex + 1]) ? $this->filteredTimeSlots[$timeSlotIndex + 1] : null;
-        $previousTimeSlot = isset($this->filteredTimeSlots[$timeSlotIndex - 1]) ? $this->filteredTimeSlots[$timeSlotIndex - 1] : null;
-
+        $timeSlotIndex = array_search(
+            $timeslotAssignmentId,
+            $this->filteredTimeSlots
+        );
+        $nextTimeSlot = isset($this->filteredTimeSlots[$timeSlotIndex + 1])
+            ? $this->filteredTimeSlots[$timeSlotIndex + 1]
+            : null;
+        $previousTimeSlot = isset($this->filteredTimeSlots[$timeSlotIndex - 1])
+            ? $this->filteredTimeSlots[$timeSlotIndex - 1]
+            : null;
 
         $query = "SELECT COUNT(*) AS count
                 FROM duty_watchbill_2
@@ -528,7 +535,6 @@ class DutyWatchbill
 
         return $result[0]["count"] > 0; // Return true if count is greater than 0
     }
-
 
     /**
      * Empties all the slots in the watchbill.
