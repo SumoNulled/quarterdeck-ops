@@ -339,6 +339,16 @@ class DutyWatchbill
         return true;
     }
 
+    /**
+    * Fills the watchbill with available sailors.
+    * Uses cascade style (assigns all first watches, then all second, so on...)
+    *
+    * This method assigns sailors to empty watch slots for BAW and BRW positions.
+    * It first attempts to assign sailors to any empty slots, and then fills remaining empty slots by doubling up sailors if needed.
+    *
+    * @return array Returns an array of empty watch slots remaining after assignment.
+    */
+
     public function fillWatchBill(): array
     {
         // Get the list of sailors and shuffle to randomize assignment
