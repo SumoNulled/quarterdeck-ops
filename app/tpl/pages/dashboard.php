@@ -5,7 +5,7 @@
       $conn = new \Database\MySQLi();
       $timeslots = new \WatchBill\TimeSlots($conn);
 
-      $date = new DateTime('2024-12-1');
+      $date = new DateTime('2024-12-2');
       $dutyWatchbill = new \WatchBill\DutyWatchbillRenderer($conn, $date);
 
       $dayOfWeek = $date->format('N');

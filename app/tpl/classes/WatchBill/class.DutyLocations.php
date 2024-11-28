@@ -213,7 +213,7 @@ class DutyLocations
     {
         $query = "SELECT building_name FROM duty_locations WHERE building_number = ?";
         $result = $this->conn->Rows($query, $buildingNumber);
-        return $result['0']['building_name'];
+        return $result[0]['building_name'];
     }
 
     public function getDetails()

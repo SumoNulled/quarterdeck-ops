@@ -233,23 +233,40 @@ class DutyWatchbill
         $start2 = new \DateTime($start2 . " " . $this->date);
         $end2 = new \DateTime($end2 . " " . $this->date);
 
-        // Handle cases where times roll over midnight
-        if ($end1 <= $start1) {
-            $end1->modify("+1 day");
+        $watch_start = (int) $start1->format("H");
+        $watch_end = (int) $end1->format("H");
+
+        //Correct for midnight rollovers for watch.
+        switch (true) {
+            case $watch_start < 16: // This only works on weekdays. Experiment with weekends.
+                $start1->modify("+1 day");
+                $end1->modify("+1 day");
+                break;
+
+            case $watch_end < 16: // This only works on weekdays. Experiment with weekends.
+                $end1->modify("+1 day");
+                break;
+
+            default:
+                break;
         }
 
-        if ($end2 <= $start2 || $end2->format("H:i:s") === "00:00:00") {
-            $end2->modify("+1 day");
-        }
+        // Correct for midnight rollovers in provided time
+        switch (true) {
+            case $end2 <= $start2 || $end2->format("H:i:s") === "00:00:00":
+                // The provided time crosses midnight; adjust end time
+                $end2->modify("+1 day");
+                break;
 
-        if ($start1->format("H:i:s") === "00:00:00") {
-            $start1->modify("+1 day");
-            $end1->modify("+1 day");
-        }
+            case $start2->format("H:i:s") === "00:00:00":
+                // Start time is midnight; adjust both start and end times
+                $start2->modify("+1 day");
+                $end2->modify("+1 day");
+                break;
 
-        if ($start2->format("H:i:s") === "00:00:00") {
-            $start2->modify("+1 day");
-            $end2->modify("+1 day");
+            default:
+                // No adjustments needed
+                break;
         }
 
         // Apply the 30 minutes early watch relief for more precise overlap checking.
@@ -296,7 +313,7 @@ class DutyWatchbill
 
         // Check if sailor has mandatory study conflict during the week. (Excludes weekends).
         if (
-            $this->sailor->hasMandatoryStudy() &&
+            $this->sailor->hasMandatoryStudy($sailor["id"]) &&
             ($this->timeRangesOverlap(
                 $watch["id"],
                 $this->sailor->getStudyHours($sailor["id"])
@@ -318,7 +335,6 @@ class DutyWatchbill
         if (!$isSecured && !$sailor["basic_qualified"]) {
             return false;
         }
-
         // Sailor is qualified for this watch slot
         return true;
     }
@@ -350,6 +366,7 @@ class DutyWatchbill
             // Assign BAW if empty
             if (is_null($row["baw_id"])) {
                 $row["position"] = "BAW";
+                $assigned = false;
                 foreach ($sailors as $sailor) {
                     if (
                         !in_array($sailor["id"], $usedSailors) &&
@@ -373,14 +390,55 @@ class DutyWatchbill
                             $row["watch_location"] .
                             "\n";
 
+                        $assigned = true;
                         break;
                     }
+
+                    // Log reasons why the sailor was skipped
+                    if (in_array($sailor["id"], $usedSailors)) {
+                        $log .=
+                            "[" .
+                            date("Y-m-d H:i:s") .
+                            "] Skipped sailor " .
+                            $sailor["last_name"] .
+                            " for BAW ({$row["id"]}) in " .
+                            $this->dutyLocation->getById(
+                                $row["watch_location"],
+                                "building_name"
+                            ) .
+                            ": Already assigned.\n";
+                    } elseif (!$this->isSailorQualified($sailor, $row)) {
+                        $log .=
+                            "[" .
+                            date("Y-m-d H:i:s") .
+                            "] Skipped sailor " .
+                            $sailor["last_name"] .
+                            " for BAW ({$row["id"]}) in " .
+                            $this->dutyLocation->getById(
+                                $row["watch_location"],
+                                "building_name"
+                            ) .
+                            ": Not qualified.\n";
+                    }
+                }
+
+                if (!$assigned) {
+                    $log .=
+                        "[" .
+                        date("Y-m-d H:i:s") .
+                        "] No sailor assigned to BAW ({$row["id"]}) in " .
+                        $this->dutyLocation->getById(
+                            $row["watch_location"],
+                            "building_name"
+                        ) .
+                        "\n";
                 }
             }
 
             // Assign BRW if empty
             if (is_null($row["brw_id"])) {
                 $row["position"] = "BRW";
+                $assigned = false;
                 foreach ($sailors as $sailor) {
                     if (
                         !in_array($sailor["id"], $usedSailors) &&
@@ -404,8 +462,48 @@ class DutyWatchbill
                             $row["watch_location"] .
                             "\n";
 
+                        $assigned = true;
                         break;
                     }
+
+                    // Log reasons why the sailor was skipped
+                    if (in_array($sailor["id"], $usedSailors)) {
+                        $log .=
+                            "[" .
+                            date("Y-m-d H:i:s") .
+                            "] Skipped sailor " .
+                            $sailor["last_name"] .
+                            " for BRW ({$row["id"]}) in " .
+                            $this->dutyLocation->getById(
+                                $row["watch_location"],
+                                "building_name"
+                            ) .
+                            ": Already assigned.\n";
+                    } elseif (!$this->isSailorQualified($sailor, $row)) {
+                        $log .=
+                            "[" .
+                            date("Y-m-d H:i:s") .
+                            "] Skipped sailor " .
+                            $sailor["last_name"] .
+                            " for BRW ({$row["id"]}) in " .
+                            $this->dutyLocation->getById(
+                                $row["watch_location"],
+                                "building_name"
+                            ) .
+                            ": Not qualified.\n";
+                    }
+                }
+
+                if (!$assigned) {
+                    $log .=
+                        "[" .
+                        date("Y-m-d H:i:s") .
+                        "] No sailor assigned to BRW ({$row["id"]}) in " .
+                        $this->dutyLocation->getById(
+                            $row["watch_location"],
+                            "building_name"
+                        ) .
+                        "\n";
                 }
             }
         }
@@ -423,6 +521,7 @@ class DutyWatchbill
 
         // Check for remaining empty watches and handle doubling up if needed
         $emptyWatches = $this->getEmptyWatches();
+
         if (!empty($emptyWatches)) {
             foreach ($emptyWatches as $emptyRow) {
                 shuffle($sailors); // Shuffle for randomness in doubling up
@@ -430,6 +529,7 @@ class DutyWatchbill
                 // Handle BAW empty slots first
                 if (is_null($emptyRow["baw_id"])) {
                     $emptyRow["position"] = "BAW";
+                    $assigned = false;
                     foreach ($sailors as $sailor) {
                         if ($this->canDoubleUp($sailor, $emptyRow)) {
                             $emptyRow["baw_id"] = $sailor["id"];
@@ -445,18 +545,47 @@ class DutyWatchbill
                                 date("Y-m-d H:i:s") .
                                 "] Double-up: Assigned sailor " .
                                 $sailor["last_name"] .
-                                " to BAW in " .
-                                $emptyRow["watch_location"] .
+                                " to BAW ({$emptyRow["id"]}) in " .
+                                $this->dutyLocation->getById(
+                                    $emptyRow["watch_location"],
+                                    "building_name"
+                                ) .
                                 "\n";
 
+                            $assigned = true;
                             break;
+                        } else {
+                            $log .=
+                                "[" .
+                                date("Y-m-d H:i:s") .
+                                "] DOUBLE: Skipped sailor " .
+                                $sailor["last_name"] .
+                                " for BAW ({$emptyRow["id"]}) in " .
+                                $this->dutyLocation->getById(
+                                    $emptyRow["watch_location"],
+                                    "building_name"
+                                ) .
+                                ": Already assigned.\n";
                         }
+                    }
+
+                    if (!$assigned) {
+                        $log .=
+                            "[" .
+                            date("Y-m-d H:i:s") .
+                            "] No sailor assigned to BAW ({$emptyRow["id"]}) (double-up) in " .
+                            $this->dutyLocation->getById(
+                                $emptyRow["watch_location"],
+                                "building_name"
+                            ) .
+                            "\n";
                     }
                 }
 
                 // Handle BRW empty slots
                 if (is_null($emptyRow["brw_id"])) {
                     $emptyRow["position"] = "BRW";
+                    $assigned = false;
                     foreach ($sailors as $sailor) {
                         if ($this->canDoubleUp($sailor, $emptyRow)) {
                             $emptyRow["brw_id"] = $sailor["id"];
@@ -472,12 +601,40 @@ class DutyWatchbill
                                 date("Y-m-d H:i:s") .
                                 "] Double-up: Assigned sailor " .
                                 $sailor["last_name"] .
-                                " to BRW in " .
-                                $emptyRow["watch_location"] .
+                                " to BRW ({$emptyRow["id"]}) in " .
+                                $this->dutyLocation->getById(
+                                    $emptyRow["watch_location"],
+                                    "building_name"
+                                ) .
                                 "\n";
 
+                            $assigned = true;
                             break;
+                        } else {
+                            $log .=
+                                "[" .
+                                date("Y-m-d H:i:s") .
+                                "] DOUBLE: Skipped sailor " .
+                                $sailor["last_name"] .
+                                " for BRW ({$emptyRow["id"]}) in " .
+                                $this->dutyLocation->getById(
+                                    $emptyRow["watch_location"],
+                                    "building_name"
+                                ) .
+                                ": Already assigned.\n";
                         }
+                    }
+
+                    if (!$assigned) {
+                        $log .=
+                            "[" .
+                            date("Y-m-d H:i:s") .
+                            "] No sailor assigned to BRW ({$emptyRow["id"]}) (double-up) in " .
+                            $this->dutyLocation->getById(
+                                $emptyRow["watch_location"],
+                                "building_name"
+                            ) .
+                            "\n";
                     }
                 }
             }
@@ -492,7 +649,7 @@ class DutyWatchbill
         }
 
         $filePath = $logDirectory . $logFileName;
-        file_put_contents($filePath, $log);
+        //file_put_contents($filePath, $log);
 
         // Return remaining empty watch slots
         return $this->getEmptyWatches();
@@ -509,10 +666,9 @@ class DutyWatchbill
      */
     public function canDoubleUp(array $sailor, array $row): bool
     {
-        if (
-            !$this->isSailorQualified($sailor, $row) ||
-            $this->isSailorAlreadyAssignedToTimeslot($sailor, $row)
-        ) {
+        if (!$this->isSailorQualified($sailor, $row)) {
+            return false;
+        } elseif ($this->isSailorAlreadyAssignedToTimeslot($sailor, $row)) {
             return false;
         }
 
@@ -637,13 +793,12 @@ class DutyWatchbill
 
         // Create the final query string
         $setClauseStr = implode(", ", $finalSetClauses);
-        $query =
-            "UPDATE duty_watchbill_2 SET $setClauseStr WHERE id IN (" .
-            implode(",", $ids) .
-            ")";
+        if ($ids = implode(",", $ids)) {
+            $query = "UPDATE duty_watchbill_2 SET $setClauseStr WHERE id IN (?)";
 
-        // Execute the query with the values
-        $this->conn->Query($query, ...$values);
+            // Execute the query with the values
+            $this->conn->Query($query, $ids, ...$values);
+        }
     }
 
     /**

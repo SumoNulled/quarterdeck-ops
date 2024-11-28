@@ -11,3 +11,6 @@ favicon.ico
 LICENSE.md
 package.json
 README.md
+watchbill_log_*
+debug.php
+test.php

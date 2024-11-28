@@ -111,9 +111,9 @@ class Sailors
      *
      * @return bool True if the sailor has mandatory study, false otherwise
      */
-    public function hasMandatoryStudy(): bool
+    public function hasMandatoryStudy(int $id): bool
     {
-        return !empty($this->sailor['mandatory_study']) && $this->sailor['mandatory_study'] === 'True';
+        return !empty($this->getById($id, 'mandatory_study')) && $this->getById($id, 'mandatory_study') ? True : False ;
     }
 
     /**
