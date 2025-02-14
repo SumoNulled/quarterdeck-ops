@@ -27,7 +27,7 @@ QuarterdeckOps builds watchbills dynamically by considering qualifications, duty
 
 2. **Constraint-Based Scheduling**:
    - **Duty Driver Exclusion**: Duty Drivers do not stand watch.
-   - **Leave/Duty Day-Off**: Allows you to mark a sailor as on leave, or having the duty day off, which removes them from the currenty duty day's watch pool.
+   - **Leave/Duty Day-Off**: Allows you to mark a sailor as on leave, or having the duty day off, which removes them from the current duty day's watch pool.
    - **Limited Duty Restrictions**: Limited Duty personnel can only stand BAW (Building Access Watch) but not BRW (Building Roving Watch).
    - **Security-Based Watch Assignments**: Only qualified sailors can be assigned to SECURED or UNSECURED buildings as per their `basic` and `secure` qualifications.
    - **Class Time and Study Conflict Avoidance**: Filters out sailors with conflicts due to overlapping class schedules or mandatory study times.
